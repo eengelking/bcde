@@ -1,0 +1,7 @@
+.build/
+*.db
+*.db-*
+/out/
+bin/
+.DS_Store
+.swiftpm/
