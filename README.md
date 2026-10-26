@@ -1,7 +1,8 @@
-# bcard — business card extractor
+# Business Card Data Extractor (bcde)
 
-Reads a folder of business-card scans (JPEG, PNG, HEIC, TIFF, PDF), pulls out contact fields with
-on-device OCR, stores them in SQLite, and exports `cards.csv` and `cards.xlsx`.
+The Business Card Data Extractor reads a folder of business-card scans (JPEG, PNG, HEIC, TIFF, PDF),
+pulls out contact fields with on-device OCR, stores them in SQLite, and exports `cards.csv` and
+`cards.xlsx`.
 
 - **Local and private.** Uses Apple Vision for OCR and Apple's NaturalLanguage/NSDataDetector for
   parsing. Nothing leaves the machine; no API keys, no network.
@@ -21,9 +22,9 @@ make csv                      # re-export just the CSV (or: make xlsx, make expo
 make ocr   FILE=~/Cards/card0042.jpg   # see why one card was misread
 ```
 
-`make build` builds the universal binary at `bin/bcard`. The other commands build it automatically
+`make build` builds the universal binary at `bin/bcde`. The other commands build it automatically
 whenever the source has changed. Building requires Xcode or the Command Line Tools. The binary
-itself needs nothing else, so you can copy `bin/bcard` to any Mac running macOS 13+.
+itself needs nothing else, so you can copy `bin/bcde` to any Mac running macOS 13+.
 
 Make variables: `CARDS`, `OUT` (default `out`), `DB` (default `$OUT/cards.db`), `LIMIT`, `JOBS`,
 `FILE`, and `ARGS` for any extra option below (e.g. `ARGS=--force`).
@@ -31,12 +32,13 @@ Make variables: `CARDS`, `OUT` (default `out`), `DB` (default `$OUT/cards.db`), 
 ### Using the binary directly
 
 ```sh
-bin/bcard scan ~/Cards --out ~/Desktop   # → cards.db (in the current dir), cards.csv, cards.xlsx
-bin/bcard export --format xlsx           # re-export from the database without re-scanning
-bin/bcard ocr ~/Cards/card0042.jpg       # debug one card: OCR lines, scores, parsed fields
+bin/bcde scan ~/Cards --out ~/Desktop   # → cards.db (in the current dir), cards.csv, cards.xlsx
+bin/bcde export --format xlsx           # re-export from the database without re-scanning
+bin/bcde ocr ~/Cards/card0042.jpg       # debug one card: OCR lines, scores, parsed fields
 ```
 
-The first run on a machine can pause for ~20 s while macOS compiles the Vision text model. Later
+The first run on a machine (or after renaming the binary) pauses for ~25 s while macOS compiles the
+Vision text model. Later
 runs start immediately.
 
 ### How cards are grouped
@@ -54,7 +56,7 @@ For any other naming scheme, pass a regex over the filename (without extension) 
 `(base)(side)`, e.g. files named `0042-1.jpg` / `0042-2.jpg`:
 
 ```sh
-bin/bcard scan ~/Cards --pair-regex '^(.+)-([12])$'
+bin/bcde scan ~/Cards --pair-regex '^(.+)-([12])$'
 ```
 
 Sub-folders are scanned recursively. Pairing only happens within the same folder.

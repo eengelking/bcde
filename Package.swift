@@ -2,12 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "bcard",
+    name: "bcde",
     platforms: [.macOS(.v13)],
     targets: [
         .executableTarget(
-            name: "bcard",
-            path: "Sources/bcard",
+            name: "bcde",
+            path: "Sources/bcde",
             swiftSettings: [.unsafeFlags(["-Ounchecked"], .when(configuration: .release))],
             linkerSettings: [.linkedLibrary("sqlite3")]
         )

@@ -1,4 +1,4 @@
-# bcard — business card extractor. Run `make` to list the commands.
+# Business Card Data Extractor (bcde). Run `make` to list the commands.
 
 # ── Settings (override on the command line: make scan CARDS=~/Cards OUT=~/Desktop) ──
 CARDS ?=
@@ -9,8 +9,8 @@ LIMIT ?=
 FILE  ?=
 ARGS  ?=
 
-BIN     := bin/bcard
-SOURCES := Package.swift $(wildcard Sources/bcard/*.swift)
+BIN     := bin/bcde
+SOURCES := Package.swift $(wildcard Sources/bcde/*.swift)
 ARCHS   := --arch arm64 --arch x86_64
 
 # make doesn't expand a leading ~ in variables, so do it here.
@@ -31,7 +31,7 @@ endif
 .PHONY: help build scan trial export csv xlsx ocr clean require-cards require-db
 
 help:
-	@printf "\n$(BOLD)bcard$(RESET) — extract contacts from business-card scans\n"
+	@printf "\n$(BOLD)Business Card Data Extractor (bcde)$(RESET)\n"
 	@printf "\nUsage: make $(CYAN)<command>$(RESET) [$(YELLOW)VAR$(RESET)=value ...]\n"
 	@awk 'BEGIN { FS = ":.*## " } \
 		/^##@/ { printf "\n$(BOLD)%s$(RESET)\n", substr($$0, 5) } \
@@ -44,7 +44,7 @@ help:
 		LIMIT "only process the first N cards"    "(trial default: 50)" \
 		JOBS  "OCR worker processes"              "(default: CPU cores - 2, max 8)" \
 		FILE  "a single card file"                "(for ocr)" \
-		ARGS  "extra bcard options"               "(e.g. --force, --fast, --pair-regex ...)"
+		ARGS  "extra bcde options"               "(e.g. --force, --fast, --pair-regex ...)"
 	@printf "\n$(BOLD)Examples$(RESET)\n"
 	@printf "  make trial CARDS=~/Cards           $(DIM)# try the first 50 cards$(RESET)\n"
 	@printf "  make scan  CARDS=~/Cards           $(DIM)# all cards → out/cards.db, .csv, .xlsx$(RESET)\n"
@@ -52,11 +52,11 @@ help:
 	@printf "  make scan  CARDS=~/Cards ARGS=--force  $(DIM)# re-process cards already done$(RESET)\n\n"
 
 ##@ Build
-build: ## Build bin/bcard (universal: Apple silicon + Intel)
+build: ## Build bin/bcde (universal: Apple silicon + Intel)
 	@printf "$(DIM)Building universal binary…$(RESET)\n"
 	@set -o pipefail; swift build -c release $(ARCHS) 2>&1 | grep -v "x86_64 architecture is deprecated"
 	@mkdir -p bin
-	@cp "$$(swift build -c release $(ARCHS) --show-bin-path)/bcard" $(BIN)
+	@cp "$$(swift build -c release $(ARCHS) --show-bin-path)/bcde" $(BIN)
 	@printf "Built $(BOLD)$(BIN)$(RESET) $(DIM)(%s)$(RESET)\n" "$$(lipo -archs $(BIN))"
 
 clean: ## Remove build output (keeps the database and exports)

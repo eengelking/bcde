@@ -1,12 +1,12 @@
 import Foundation
 
 let usage = """
-    bcard — extract contact details from business-card scans with on-device OCR (Apple Vision).
+    bcde — extract contact details from business-card scans with on-device OCR (Apple Vision).
 
     USAGE
-      bcard scan <input-dir> [options]    OCR every card, save to SQLite, export CSV + XLSX
-      bcard export [options]              Re-export CSV and/or XLSX from an existing database
-      bcard ocr <file> [<back-file>]      Show OCR lines, candidate scores and parsed fields for one card
+      bcde scan <input-dir> [options]    OCR every card, save to SQLite, export CSV + XLSX
+      bcde export [options]              Re-export CSV and/or XLSX from an existing database
+      bcde ocr <file> [<back-file>]      Show OCR lines, candidate scores and parsed fields for one card
 
     Inputs: JPEG, PNG, HEIC, TIFF and PDF. A PDF is one card (page 1 = front, page 2 = back).
     Images named like card1_front/card1_back or card1_a/card1_b are paired into one card.
@@ -146,7 +146,7 @@ func export(_ db: Database, to dir: String, formats: Set<String>) throws {
 }
 
 /// Vision serializes recognition within a process, so throughput comes from running several
-/// worker processes (`bcard __worker`). Each worker reads one JSON job per line on stdin and
+/// worker processes (`bcde __worker`). Each worker reads one JSON job per line on stdin and
 /// writes one JSON record per line on stdout; only this parent process touches the database.
 func runScan(_ o: Options) throws {
     guard let dir = o.positional.first else { throw CLIError("scan needs an input directory") }
@@ -191,13 +191,22 @@ func runScan(_ o: Options) throws {
         if Date().timeIntervalSince(lastPrint) > 0.25 { report(); lastPrint = Date() }
     }
 
+    // The first run of a new binary compiles Vision's text model (~25 s). If every worker does that at
+    // once they slow each other down several-fold, so one worker warms the cache before the rest start.
+    let warmedUp = DispatchSemaphore(value: 0)
     let group = DispatchGroup()
-    for _ in 0..<workers {
+    for index in 0..<workers {
         group.enter()
         Thread.detachNewThread {
             defer { group.leave() }
             var worker: WorkerProcess?
+            var waiting = index == 0
+            defer { if waiting { for _ in 1..<workers { warmedUp.signal() } } }
+            if index > 0 { warmedUp.wait() }
             while let job = take() {
+                defer {
+                    if waiting { waiting = false; for _ in 1..<workers { warmedUp.signal() } }
+                }
                 do {
                     if worker == nil { worker = try WorkerProcess(ocr: o.ocr) }
                     record(try worker!.run(job))
@@ -253,7 +262,7 @@ struct Job: Codable {
     }
 }
 
-/// A `bcard __worker` child process, driven one job at a time.
+/// A `bcde __worker` child process, driven one job at a time.
 final class WorkerProcess {
     private let proc = Process()
     private let input = Pipe(), output = Pipe()
